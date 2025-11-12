@@ -24,17 +24,17 @@ const Index = () => {
 
   const quotations = quotationsData as Quotation[];
 
-  // Get unique values for filters
+  // Get unique values for filters (excluding empty strings)
   const uniqueClients = useMemo(() => {
-    return Array.from(new Set(quotations.map((q) => q.CLIENT))).sort();
+    return Array.from(new Set(quotations.map((q) => q.CLIENT).filter(c => c && c.trim() !== ""))).sort();
   }, [quotations]);
 
   const uniqueStatuses = useMemo(() => {
-    return Array.from(new Set(quotations.map((q) => q.STATUS))).sort();
+    return Array.from(new Set(quotations.map((q) => q.STATUS).filter(s => s && s.trim() !== ""))).sort();
   }, [quotations]);
 
   const uniqueSalesPeople = useMemo(() => {
-    return Array.from(new Set(quotations.map((q) => q["SALES  PERSON"]))).sort();
+    return Array.from(new Set(quotations.map((q) => q["SALES  PERSON"]).filter(p => p && p.trim() !== ""))).sort();
   }, [quotations]);
 
   // Filter quotations
