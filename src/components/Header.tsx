@@ -1,4 +1,4 @@
-import reaLogo from "@/assets/rea-logo.jpg";
+import reaLogo from "@/assets/rea-logo-icon.png";
 import animaLogo from "@/assets/anima-logo.jpeg";
 
 export const Header = () => {
