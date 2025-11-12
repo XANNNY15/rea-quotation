@@ -2,13 +2,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Quotation } from "@/types/quotation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit } from "lucide-react";
 
 interface QuotationTableProps {
   quotations: Quotation[];
   currentPage: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onEdit: (quotation: Quotation) => void;
 }
 
 export const QuotationTable = ({
@@ -16,6 +17,7 @@ export const QuotationTable = ({
   currentPage,
   itemsPerPage,
   onPageChange,
+  onEdit,
 }: QuotationTableProps) => {
   const totalPages = Math.ceil(quotations.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -47,6 +49,7 @@ export const QuotationTable = ({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[100px]">Actions</TableHead>
               <TableHead className="w-[120px]">Quotation No</TableHead>
               <TableHead className="w-[120px]">Date</TableHead>
               <TableHead>Client</TableHead>
@@ -54,8 +57,8 @@ export const QuotationTable = ({
               <TableHead>Description 1</TableHead>
               <TableHead>Description 2</TableHead>
               <TableHead className="w-[100px]">Qty</TableHead>
-              <TableHead className="w-[120px]">Unit Cost</TableHead>
-              <TableHead className="w-[120px]">Total Amount</TableHead>
+              <TableHead className="w-[120px]">Unit Cost (AED)</TableHead>
+              <TableHead className="w-[120px]">Total Amount (AED)</TableHead>
               <TableHead className="w-[120px]">Sales Person</TableHead>
               <TableHead className="w-[120px]">Invoice No</TableHead>
               <TableHead className="w-[100px]">Status</TableHead>
@@ -64,13 +67,23 @@ export const QuotationTable = ({
           <TableBody>
             {currentQuotations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                   No quotations found
                 </TableCell>
               </TableRow>
             ) : (
               currentQuotations.map((quotation, index) => (
-                <TableRow key={`${quotation["QUOTATION NO"]}-${index}`}>
+                <TableRow key={`${quotation["QUOTATION NO"]}-${index}`} className="hover:bg-secondary/50">
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(quotation)}
+                      className="h-8 w-8 p-0 hover:bg-brand-teal hover:text-white"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                   <TableCell className="font-medium">{quotation["QUOTATION NO"]}</TableCell>
                   <TableCell>{quotation["QUOTATION DATE"]}</TableCell>
                   <TableCell className="max-w-[200px] truncate" title={quotation["CLIENT"]}>

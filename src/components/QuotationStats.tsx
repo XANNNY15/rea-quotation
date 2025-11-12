@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, DollarSign, CheckCircle, XCircle } from "lucide-react";
+import { FileText, CheckCircle, XCircle, Coins } from "lucide-react";
 
 interface QuotationStatsProps {
   totalQuotations: number;
@@ -28,13 +28,14 @@ export const QuotationStats = ({
 
       <Card className="border-l-4 border-l-brand-blue shadow-md hover:shadow-lg transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
-          <DollarSign className="h-5 w-5 text-brand-blue" />
+          <CardTitle className="text-sm font-medium">Total Amount (AED)</CardTitle>
+          <Coins className="h-5 w-5 text-brand-blue" />
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-brand-blue">
             {totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
+          <p className="text-xs text-muted-foreground mt-1">United Arab Emirates Dirham</p>
         </CardContent>
       </Card>
 

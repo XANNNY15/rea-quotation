@@ -5,6 +5,7 @@ import { QuotationFilters } from "@/components/QuotationFilters";
 import { QuotationStats } from "@/components/QuotationStats";
 import { QuotationTable } from "@/components/QuotationTable";
 import { AddQuotationDialog } from "@/components/AddQuotationDialog";
+import { EditQuotationDialog } from "@/components/EditQuotationDialog";
 import { Quotation } from "@/types/quotation";
 import quotationsData from "@/data/quotations.json";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 const Index = () => {
   const { toast } = useToast();
   const [quotations, setQuotations] = useState<Quotation[]>(quotationsData as Quotation[]);
+  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     client: "all",
     status: "all",
@@ -170,6 +173,19 @@ const Index = () => {
     setQuotations(prev => [newQuotation, ...prev]);
   };
 
+  const handleEditQuotation = (quotation: Quotation) => {
+    setEditingQuotation(quotation);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (updatedQuotation: Quotation, originalQuotationNo: string) => {
+    setQuotations(prev => 
+      prev.map(q => 
+        q["QUOTATION NO"] === originalQuotationNo ? updatedQuotation : q
+      )
+    );
+  };
+
   const handleExportExcel = () => {
     exportToExcel(filteredQuotations, 'rea_quotations');
     toast({
@@ -261,8 +277,16 @@ const Index = () => {
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
+            onEdit={handleEditQuotation}
           />
         </div>
+
+        <EditQuotationDialog
+          quotation={editingQuotation}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSave={handleSaveEdit}
+        />
       </div>
 
       <Footer />

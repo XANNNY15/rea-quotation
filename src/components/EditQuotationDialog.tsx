@@ -1,21 +1,22 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
 import { Quotation } from "@/types/quotation";
 import { useToast } from "@/hooks/use-toast";
 
-interface AddQuotationDialogProps {
-  onAdd: (quotation: Quotation) => void;
+interface EditQuotationDialogProps {
+  quotation: Quotation | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (quotation: Quotation, originalQuotationNo: string) => void;
 }
 
-export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
+export const EditQuotationDialog = ({ quotation, open, onOpenChange, onSave }: EditQuotationDialogProps) => {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<Quotation>({
     "QUOTATION NO": "",
     "QUOTATION DATE": "",
@@ -30,6 +31,14 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
     "INVOICE NO": "",
     "STATUS": "PENDING",
   });
+  const [originalQuotationNo, setOriginalQuotationNo] = useState("");
+
+  useEffect(() => {
+    if (quotation && open) {
+      setFormData(quotation);
+      setOriginalQuotationNo(quotation["QUOTATION NO"]);
+    }
+  }, [quotation, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,28 +52,13 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
       return;
     }
 
-    onAdd(formData);
+    onSave(formData, originalQuotationNo);
     toast({
-      title: "Quotation Added",
-      description: `Quotation ${formData["QUOTATION NO"]} has been added successfully.`,
+      title: "Quotation Updated",
+      description: `Quotation ${formData["QUOTATION NO"]} has been updated successfully.`,
     });
     
-    // Reset form
-    setFormData({
-      "QUOTATION NO": "",
-      "QUOTATION DATE": "",
-      "CLIENT": "",
-      "NEW/OLD": "NEW",
-      "DESCRIPTION 1": "",
-      "DESCRIPTION 2": "",
-      "QTY": "",
-      "UNIT COST": "",
-      "TOTAL AMOUNT": "",
-      "SALES  PERSON": "",
-      "INVOICE NO": "",
-      "STATUS": "PENDING",
-    });
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const handleChange = (field: keyof Quotation, value: string) => {
@@ -84,18 +78,12 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-brand-teal hover:bg-brand-teal/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Quotation
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Quotation</DialogTitle>
+          <DialogTitle>Edit Quotation</DialogTitle>
           <DialogDescription>
-            Fill in the quotation details below. Fields marked with * are required.
+            Update the quotation details below. Fields marked with * are required.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -237,11 +225,11 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" className="bg-brand-teal hover:bg-brand-teal/90">
-              Add Quotation
+              Save Changes
             </Button>
           </div>
         </form>
