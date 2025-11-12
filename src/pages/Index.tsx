@@ -1,13 +1,21 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { QuotationFilters } from "@/components/QuotationFilters";
 import { QuotationStats } from "@/components/QuotationStats";
 import { QuotationTable } from "@/components/QuotationTable";
+import { AddQuotationDialog } from "@/components/AddQuotationDialog";
 import { Quotation } from "@/types/quotation";
 import quotationsData from "@/data/quotations.json";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { exportToExcel, exportToPDF } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const { toast } = useToast();
+  const [quotations, setQuotations] = useState<Quotation[]>(quotationsData as Quotation[]);
   const [filters, setFilters] = useState({
     client: "all",
     status: "all",
@@ -22,7 +30,25 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const quotations = quotationsData as Quotation[];
+  // Save to localStorage whenever quotations change
+  useEffect(() => {
+    localStorage.setItem('quotations', JSON.stringify(quotations));
+  }, [quotations]);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('quotations');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setQuotations(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to load saved quotations');
+      }
+    }
+  }, []);
 
   // Get unique values for filters (excluding empty strings)
   const uniqueClients = useMemo(() => {
@@ -140,6 +166,26 @@ const Index = () => {
     setCurrentPage(1);
   };
 
+  const handleAddQuotation = (newQuotation: Quotation) => {
+    setQuotations(prev => [newQuotation, ...prev]);
+  };
+
+  const handleExportExcel = () => {
+    exportToExcel(filteredQuotations, 'rea_quotations');
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredQuotations.length} quotations to Excel.`,
+    });
+  };
+
+  const handleExportPDF = () => {
+    exportToPDF(filteredQuotations, 'rea_quotations');
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredQuotations.length} quotations to PDF.`,
+    });
+  };
+
   const parseDate = (dateStr: string): Date => {
     const [day, month, year] = dateStr.split("-");
     const monthMap: { [key: string]: number } = {
@@ -150,15 +196,38 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Quotation Tracker 2025</h1>
-          <p className="text-muted-foreground">Manage and track all your quotations in one place</p>
-        </header>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex flex-col">
+      <Header />
+      
+      <div className="container mx-auto py-8 px-4 flex-1">
+        <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Quotation Management</h2>
+            <p className="text-muted-foreground">Track, manage, and export your quotations</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <AddQuotationDialog onAdd={handleAddQuotation} />
+            <Button 
+              onClick={handleExportExcel}
+              variant="outline"
+              className="border-success text-success hover:bg-success hover:text-white"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Export Excel
+            </Button>
+            <Button 
+              onClick={handleExportPDF}
+              variant="outline"
+              className="border-destructive text-destructive hover:bg-destructive hover:text-white"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
+        </div>
 
         <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
           <Input
             placeholder="Search across all fields..."
             value={searchQuery}
@@ -166,7 +235,7 @@ const Index = () => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="pl-10"
+            className="pl-10 h-12 text-lg shadow-sm border-2 focus:border-brand-teal"
           />
         </div>
 
@@ -195,6 +264,8 @@ const Index = () => {
           />
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

@@ -25,11 +25,13 @@ export const QuotationTable = ({
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     if (statusLower === "invoiced") {
-      return <Badge className="bg-green-500 hover:bg-green-600">{status}</Badge>;
+      return <Badge className="bg-success text-white hover:bg-success/90">{status}</Badge>;
     } else if (statusLower === "regret") {
       return <Badge variant="destructive">{status}</Badge>;
     } else if (statusLower === "pending") {
-      return <Badge variant="secondary">{status}</Badge>;
+      return <Badge className="bg-warning text-white hover:bg-warning/90">{status}</Badge>;
+    } else if (statusLower === "open") {
+      return <Badge className="bg-brand-blue text-white hover:bg-brand-blue/90">{status}</Badge>;
     }
     return <Badge variant="outline">{status}</Badge>;
   };
@@ -109,11 +111,12 @@ export const QuotationTable = ({
               size="sm"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
             </Button>
-            <div className="text-sm font-medium">
+            <div className="text-sm font-medium px-4 py-2 bg-secondary rounded-md">
               Page {currentPage} of {totalPages}
             </div>
             <Button
@@ -121,6 +124,7 @@ export const QuotationTable = ({
               size="sm"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
+              className="border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white"
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
