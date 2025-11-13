@@ -37,14 +37,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `You are a quotation data extraction expert. Extract quotation information from this document. Return ONLY a valid JSON object with these exact fields:
+                text: `You are a quotation data extraction expert. Analyze this document (image or PDF) carefully and extract all quotation information. Return ONLY a valid JSON object with these exact fields:
 {
   "QUOTATION NO": "quotation number",
   "QUOTATION DATE": "date in DD/MM/YYYY format",
@@ -60,11 +60,13 @@ serve(async (req) => {
   "STATUS": "INVOICED, PENDING, or REGRET"
 }
 
-Rules:
-- If field not found, use empty string ""
-- Remove currency symbols from numbers
-- Date format: DD/MM/YYYY
-- Return ONLY valid JSON, no extra text`
+Important instructions:
+- Carefully examine ALL text in the document including headers, tables, and small print
+- If any field is not found, use empty string ""
+- For numeric fields (QTY, UNIT COST, TOTAL AMOUNT), extract only numbers without currency symbols
+- Date format must be DD/MM/YYYY
+- For PDFs, scan all pages if multi-page
+- Return ONLY valid JSON without markdown code blocks or extra text`
               },
               {
                 type: "image_url",
