@@ -97,12 +97,12 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
   };
 
   const extractQuotationData = async (file: File) => {
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+    // Validate file type - only images supported
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload an image (JPG, PNG, WEBP) or PDF file.",
+        description: "Please upload an image (JPG, PNG, or WEBP). PDF files are not supported yet.",
         variant: "destructive",
       });
       return;
@@ -191,7 +191,7 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,application/pdf"
+              accept="image/*"
               onChange={handleFileUpload}
               className="hidden"
             />
@@ -221,9 +221,12 @@ export const AddQuotationDialog = ({ onAdd }: AddQuotationDialogProps) => {
             disabled={isScanning}
           >
             <Upload className="mr-2 h-4 w-4" />
-            Upload File
+            Upload Image
           </Button>
         </div>
+        <p className="text-sm text-muted-foreground px-4">
+          📷 Supported formats: JPG, PNG, WEBP (max 10MB)
+        </p>
 
         {isScanning && (
           <div className="flex items-center justify-center gap-2 p-4 bg-primary/10 rounded-lg">
