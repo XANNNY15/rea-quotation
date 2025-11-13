@@ -211,6 +211,16 @@ const Index = () => {
     );
   };
 
+  const handleDeleteQuotation = (quotation: Quotation) => {
+    if (window.confirm(`Are you sure you want to delete quotation ${quotation["QUOTATION NO"]}?`)) {
+      setQuotations((prev) => prev.filter((q) => q["QUOTATION NO"] !== quotation["QUOTATION NO"]));
+      toast({
+        title: "Deleted",
+        description: "Quotation deleted successfully",
+      });
+    }
+  };
+
   const handleExportExcel = () => {
     exportToExcel(filteredQuotations, 'rea_quotations');
     toast({
@@ -308,13 +318,14 @@ const Index = () => {
         />
 
         <div className="mt-6">
-          <QuotationTable
-            quotations={filteredQuotations}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onEdit={handleEditQuotation}
-          />
+            <QuotationTable
+              quotations={filteredQuotations}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onEdit={handleEditQuotation}
+              onDelete={handleDeleteQuotation}
+            />
         </div>
 
         <EditQuotationDialog

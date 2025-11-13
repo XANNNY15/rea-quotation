@@ -16,13 +16,19 @@ serve(async (req) => {
     if (!imageData) {
       throw new Error("No image data provided");
     }
+
+    // Validate base64 format
+    if (!imageData.startsWith('data:')) {
+      throw new Error("Invalid image format. Expected base64 data URL.");
+    }
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log('Extracting quotation data from document...', imageData.substring(0, 50));
+    const mimeType = imageData.split(';')[0].split(':')[1];
+    console.log('Extracting quotation data from document...', `Type: ${mimeType}, Size: ${imageData.length}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -31,14 +37,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `You are a quotation data extraction expert. Carefully analyze this image or PDF document and extract all quotation details. Return ONLY a valid JSON object with these exact fields:
+                text: `You are a quotation data extraction expert. Extract quotation information from this document. Return ONLY a valid JSON object with these exact fields:
 {
   "QUOTATION NO": "quotation number",
   "QUOTATION DATE": "date in DD/MM/YYYY format",
@@ -54,12 +60,11 @@ serve(async (req) => {
   "STATUS": "INVOICED, PENDING, or REGRET"
 }
 
-Important instructions:
-- If any field is not found in the document, use an empty string ("")
-- For numeric fields (QTY, UNIT COST, TOTAL AMOUNT), extract only the number without currency symbols (₹, $, etc.)
-- For dates, use DD/MM/YYYY format
-- Look carefully at all text in the document, including headers, tables, and fine print
-- Return ONLY valid JSON, no markdown formatting or extra text`
+Rules:
+- If field not found, use empty string ""
+- Remove currency symbols from numbers
+- Date format: DD/MM/YYYY
+- Return ONLY valid JSON, no extra text`
               },
               {
                 type: "image_url",

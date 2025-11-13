@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Quotation } from "@/types/quotation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Edit } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 
 interface QuotationTableProps {
   quotations: Quotation[];
@@ -10,6 +10,7 @@ interface QuotationTableProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onEdit: (quotation: Quotation) => void;
+  onDelete: (quotation: Quotation) => void;
 }
 
 export const QuotationTable = ({
@@ -18,6 +19,7 @@ export const QuotationTable = ({
   itemsPerPage,
   onPageChange,
   onEdit,
+  onDelete,
 }: QuotationTableProps) => {
   const totalPages = Math.ceil(quotations.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -75,14 +77,24 @@ export const QuotationTable = ({
               currentQuotations.map((quotation, index) => (
                 <TableRow key={`${quotation["QUOTATION NO"]}-${index}`} className="hover:bg-secondary/50">
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(quotation)}
-                      className="h-8 w-8 p-0 hover:bg-brand-teal hover:text-white"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(quotation)}
+                        className="h-8 w-8 p-0 hover:bg-brand-teal hover:text-white"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(quotation)}
+                        className="h-8 w-8 p-0 hover:bg-destructive hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell className="font-medium">{quotation["QUOTATION NO"]}</TableCell>
                   <TableCell>{quotation["QUOTATION DATE"]}</TableCell>
