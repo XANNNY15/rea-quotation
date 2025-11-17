@@ -9,7 +9,7 @@ import { QuotationTable } from "@/components/QuotationTable";
 import { AddQuotationDialog } from "@/components/AddQuotationDialog";
 import { EditQuotationDialog } from "@/components/EditQuotationDialog";
 import { Quotation } from "@/types/quotation";
-import quotationsData from "@/data/quotations-full.json";
+import quotationsData from "@/data/quotations-import.json";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Download, FileSpreadsheet, FileText, ArrowUpDown } from "lucide-react";
@@ -68,8 +68,87 @@ const Index = () => {
       // Clear localStorage
       localStorage.removeItem('quotations');
       
-      // Set quotations from database only
-      if (data && data.length > 0) {
+      // Import from JSON file if database is empty
+      if (!data || data.length === 0) {
+        const importData = quotationsData as Quotation[];
+        console.log(`Starting import of ${importData.length} quotations from JSON file...`);
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const insertData = importData.map(q => ({
+            user_id: user.id,
+            quotation_no: q["QUOTATION NO"],
+            quotation_date: q["QUOTATION DATE"],
+            client: q.CLIENT,
+            new_old: q["NEW/OLD"],
+            description_1: q["DESCRIPTION 1"],
+            description_2: q["DESCRIPTION 2"],
+            qty: q.QTY,
+            unit_cost: q["UNIT COST"],
+            total_amount: q["TOTAL AMOUNT"],
+            sales_person: q["SALES  PERSON"],
+            invoice_no: q["INVOICE NO"],
+            status: q.STATUS,
+          }));
+
+          // Batch insert in chunks of 500 to avoid limits
+          const batchSize = 500;
+          let importedCount = 0;
+          
+          for (let i = 0; i < insertData.length; i += batchSize) {
+            const batch = insertData.slice(i, i + batchSize);
+            const { error: insertError } = await supabase
+              .from('quotations')
+              .insert(batch);
+
+            if (insertError) {
+              console.error(`Error importing batch ${i / batchSize + 1}:`, insertError);
+              toast({
+                title: "Import Error",
+                description: `Failed at batch ${i / batchSize + 1}: ${insertError.message}`,
+                variant: "destructive",
+              });
+              break;
+            } else {
+              importedCount += batch.length;
+              console.log(`Imported ${importedCount} of ${insertData.length} quotations...`);
+            }
+          }
+
+          if (importedCount === insertData.length) {
+            toast({
+              title: "Import Complete",
+              description: `Successfully imported all ${importedCount} quotations into database`,
+            });
+            
+            // Reload data after import
+            const { data: reloadedData } = await supabase
+              .from('quotations')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .range(0, 9999);
+            
+            if (reloadedData) {
+              const formattedQuotations: Quotation[] = reloadedData.map(q => ({
+                "QUOTATION NO": q.quotation_no,
+                "QUOTATION DATE": q.quotation_date,
+                "CLIENT": q.client,
+                "NEW/OLD": q.new_old,
+                "DESCRIPTION 1": q.description_1 || "",
+                "DESCRIPTION 2": q.description_2 || "",
+                "QTY": q.qty || "",
+                "UNIT COST": q.unit_cost || "",
+                "TOTAL AMOUNT": q.total_amount || "",
+                "SALES  PERSON": q.sales_person || "",
+                "INVOICE NO": q.invoice_no || "",
+                "STATUS": q.status,
+              }));
+              setQuotations(formattedQuotations);
+            }
+          }
+        }
+      } else {
+        // Load data from database
         const formattedQuotations: Quotation[] = data.map(q => ({
           "QUOTATION NO": q.quotation_no,
           "QUOTATION DATE": q.quotation_date,
@@ -85,9 +164,6 @@ const Index = () => {
           "STATUS": q.status,
         }));
         setQuotations(formattedQuotations);
-      } else {
-        // Database is empty - show empty state
-        setQuotations([]);
       }
       setLoading(false);
     };
