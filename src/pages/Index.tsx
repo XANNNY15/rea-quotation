@@ -65,27 +65,16 @@ const Index = () => {
         return;
       }
 
-      // Migrate from localStorage or JSON file if database is empty
+      // Migrate from JSON file if database is empty
       if (!data || data.length === 0) {
-        let localQuotations: Quotation[] = [];
+        // Clear localStorage to ensure fresh import
+        localStorage.removeItem('quotations');
         
-        // Try localStorage first
-        const savedLocal = localStorage.getItem('quotations');
-        if (savedLocal) {
-          try {
-            localQuotations = JSON.parse(savedLocal);
-          } catch (e) {
-            console.error('Failed to parse localStorage:', e);
-          }
-        }
-        
-        // If localStorage is empty, use JSON file
-        if (localQuotations.length === 0) {
-          localQuotations = quotationsData as Quotation[];
-        }
+        // Use JSON file data
+        const localQuotations = quotationsData as Quotation[];
 
         if (localQuotations.length > 0) {
-          console.log('Migrating quotations to database...');
+          console.log(`Starting migration of ${localQuotations.length} quotations from JSON file...`);
           
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
@@ -117,6 +106,11 @@ const Index = () => {
 
               if (insertError) {
                 console.error(`Error migrating batch ${i / batchSize + 1}:`, insertError);
+                toast({
+                  title: "Migration Error",
+                  description: `Failed at batch ${i / batchSize + 1}: ${insertError.message}`,
+                  variant: "destructive",
+                });
                 break;
               } else {
                 migratedCount += batch.length;
@@ -125,16 +119,38 @@ const Index = () => {
             }
 
             if (migratedCount === insertData.length) {
-              setQuotations(localQuotations);
               toast({
                 title: "Migration Complete",
-                description: `Migrated all ${migratedCount} quotations to database`,
+                description: `Successfully imported all ${migratedCount} quotations from JSON file`,
               });
-              localStorage.removeItem('quotations');
+              // Reload data after migration
+              const { data: reloadedData } = await supabase
+                .from('quotations')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .range(0, 9999);
+              
+              if (reloadedData) {
+                const formattedQuotations: Quotation[] = reloadedData.map(q => ({
+                  "QUOTATION NO": q.quotation_no,
+                  "QUOTATION DATE": q.quotation_date,
+                  "CLIENT": q.client,
+                  "NEW/OLD": q.new_old,
+                  "DESCRIPTION 1": q.description_1 || "",
+                  "DESCRIPTION 2": q.description_2 || "",
+                  "QTY": q.qty || "",
+                  "UNIT COST": q.unit_cost || "",
+                  "TOTAL AMOUNT": q.total_amount || "",
+                  "SALES  PERSON": q.sales_person || "",
+                  "INVOICE NO": q.invoice_no || "",
+                  "STATUS": q.status,
+                }));
+                setQuotations(formattedQuotations);
+              }
             } else {
               toast({
                 title: "Partial Migration",
-                description: `Migrated ${migratedCount} of ${insertData.length} quotations`,
+                description: `Only migrated ${migratedCount} of ${insertData.length} quotations`,
                 variant: "destructive",
               });
             }
