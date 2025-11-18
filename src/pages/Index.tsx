@@ -49,7 +49,9 @@ const Index = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      console.log('Loading quotations for all users...');
+      
+      const { data, error, count } = await supabase
         .from('quotations')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
@@ -66,10 +68,12 @@ const Index = () => {
         return;
       }
 
-      // Clear localStorage
+      console.log(`Loaded ${data?.length || 0} quotations from database (total count: ${count})`);
+      
+      // Clear localStorage - we only use database now
       localStorage.removeItem('quotations');
       
-      // Import from JSON file if database is empty
+      // Import from JSON file ONLY if database is completely empty
       if (!data || data.length === 0) {
         const importData = quotationsData as Quotation[];
         console.log(`Starting import of ${importData.length} quotations from JSON file...`);
@@ -182,7 +186,10 @@ const Index = () => {
           table: 'quotations'
         },
         (payload) => {
-          console.log('Realtime change:', payload);
+          const newData = payload.new as any;
+          const oldData = payload.old as any;
+          const quotationNo = newData?.quotation_no || oldData?.quotation_no || 'unknown';
+          console.log('Realtime change detected:', payload.eventType, 'Quotation:', quotationNo);
           
           if (payload.eventType === 'INSERT') {
             const newQuotation: Quotation = {
