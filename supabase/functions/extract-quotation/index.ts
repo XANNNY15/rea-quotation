@@ -143,7 +143,7 @@ async function handlePDFFile(base64Data: string, apiKey: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -151,10 +151,7 @@ async function handlePDFFile(base64Data: string, apiKey: string) {
           },
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Analyze this PDF quotation document carefully and extract the following fields with complete accuracy:
+            content: `Analyze this PDF quotation document carefully and extract the following fields with complete accuracy:
 
 REQUIRED FIELDS (extract EXACTLY as shown in document):
 1. QUOTATION NO - The quotation/quote reference number
@@ -180,15 +177,9 @@ EXTRACTION RULES:
 - Do NOT guess, infer, or make up any information
 - Pay attention to headers, labels, and document structure
 
+PDF Content (first 2000 chars of base64): ${base64Data.substring(0, 2000)}
+
 Return your response as a JSON object with these exact keys.`
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: base64Data
-                }
-              }
-            ]
           }
         ],
         tools: [
