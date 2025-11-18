@@ -134,6 +134,10 @@ Excel content (base64 decoded): ${base64Content.substring(0, 2000)}`
 async function handlePDFFile(base64Data: string, apiKey: string) {
   try {
     console.log('Handling PDF file with AI extraction...');
+    console.log('Note: PDF extraction has limitations. For best results, use image formats (JPG/PNG) of your quotations.');
+    
+    // Extract just the base64 content
+    const base64Content = base64Data.split(',')[1] || base64Data;
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -142,52 +146,33 @@ async function handlePDFFile(base64Data: string, apiKey: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           {
             role: "system",
-            content: "You are an expert data extraction assistant. Extract quotation information from PDF documents with 100% accuracy. Only extract visible text - never guess or make up information."
+            content: "You are an expert data extraction assistant specializing in PDF documents. Extract quotation information with 100% accuracy from the provided PDF data."
           },
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Analyze this PDF quotation document carefully and extract the following fields with complete accuracy:
+            content: `Analyze this PDF quotation document and extract all fields accurately. The PDF contains structured quotation data.
 
-REQUIRED FIELDS (extract EXACTLY as shown in document):
-1. QUOTATION NO - The quotation/quote reference number
-2. QUOTATION DATE - Format as DD/MM/YYYY
-3. CLIENT - Full client/customer name or company name
-4. DESCRIPTION 1 - Primary item, service, or product description
-5. UNIT COST - Numeric value only (remove AED, $, or any currency symbols)
-6. TOTAL AMOUNT - Total cost as numeric value (remove currency symbols)
+Extract these fields EXACTLY as they appear:
+- QUOTATION NO (reference number)
+- QUOTATION DATE (convert to DD/MM/YYYY)
+- CLIENT (customer/company name)
+- DESCRIPTION 1 (main product/service)
+- DESCRIPTION 2 (additional items if any)
+- QTY (quantity as number)
+- UNIT COST (numeric only, no currency)
+- TOTAL AMOUNT (numeric only, no currency)
+- NEW/OLD (client status)
+- SALES PERSON (representative name)
+- INVOICE NO (if present)
+- STATUS (quotation status)
 
-OPTIONAL FIELDS (if visible):
-7. DESCRIPTION 2 - Additional description or second line item
-8. QTY - Quantity (numeric)
-9. NEW/OLD - Client status if mentioned
-10. SALES PERSON - Sales representative name
-11. INVOICE NO - Invoice reference if present
-12. STATUS - Order/quotation status
+Rules: Extract exact text, remove currency symbols, use empty string "" if not found. Format dates as DD/MM/YYYY.
 
-EXTRACTION RULES:
-- Extract text EXACTLY as it appears
-- For dates: convert to DD/MM/YYYY format
-- For numbers: remove all currency symbols and commas, keep only digits and decimal point
-- If a field is not visible or unclear, leave it as empty string ""
-- Do NOT guess, infer, or make up any information
-- Pay attention to headers, labels, and document structure
-
-Return structured JSON with all fields.`
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: base64Data
-                }
-              }
-            ]
+PDF document data (base64): ${base64Content.substring(0, 3000)}`
           }
         ],
         tools: [
